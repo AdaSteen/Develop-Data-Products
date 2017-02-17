@@ -2,37 +2,68 @@
 # This is the server logic of a Shiny web application. You can run the 
 # application by clicking 'Run App' above.
 #
+# Find out more about building applications with Shiny here:
+# 
+#    http://shiny.rstudio.com/
+#
 
-# Define server logic required to show the graph for the combination 
-# number of coinflips * number of simulations
+library(shiny)
+library("ggplot2")
+#library(plyr)
+library(dplyr)
+data(diamonds)
+
+# Define server logic required to determine the min and max price for a diamond 
+# given the input values
 
 shinyServer(function(input, output) {
     
-    output$numberPlot <- renderPlot({
-        
-        library(ggplot2)
-        
-        set.seed = "2017-01-14"
+  diamonds_reactive <- reactiveValues(minprice = 0, maxprice = 0, filtered_diamond_set = NULL)
+  observeEvent(input$submit, {
+    #  names(diamonds)
+      
+    #  rename(diamonds, 
+    #         c("depth" = "total depth",
+    #           "x" = "length(mm)", 
+    #           "y" = "width(mm)",
+    #           "z" = "depth(mm)",
+    #           "table" = "top width"))
+    #  glimpse(diamonds)  
+    isolate({
+      
+      if(!is.null(input$color))
+      {
+        color_filter <- as.character(input$color)
+      }
+      if(!is.null(input$clarity))
+      {
+        clarity_filter <- as.character(input$clarity)
+      }
+      if(!is.null(input$cut))
+      {
+        cut_filter <- as.character(input$cut)
+      }
+      diamonds_reactive$filtered_diamond_set <- dplyr::filter(diamonds,
+                                                carat==input$carat,
+                                                cut==as.character(input$cut),
+                                                clarity==as.character(input$clarity),
+                                                color==as.character(input$color))
+      
+     
+      names(diamonds_reactive$filtered_diamond_set) = c("carat","cut","color","clarity",
+                                                        "total depth",
+                                                        "top width",
+                                                        "price",
+                                                        "length(mm)", 
+                                                        "width(mm)",
+                                                        "depth(mm)")
+      
+      diamonds_reactive$filtered_diamond_set<-diamonds_reactive$filtered_diamond_set[,c(1,2,3,4,7,5,6,8,9,10)]
+      })
+  })
+  
+  output$diamondssubset<-renderTable(diamonds_reactive$filtered_diamond_set)
 
-        number <- input$number
-        nosim <- input$nosim
-        
-        # code provided by Brian Caffo, Jeff Leek, Roger Peng
-        # in lecture for Statistical Inference - Asymptotia 
-        # changed the code to accept input values 
-       
-        cfunc <- function(x, n) sqrt(n) * (mean(x) - 3.5) / 1.71
-        dat <- data.frame(
-            x = c(apply(matrix(sample(1 : 6, nosim * number, replace = TRUE), 
-                               nosim), 1, cfunc, number)
-            ),
-            size = factor(rep(c(number), rep(nosim, 1))))
-        g <- ggplot(dat, aes(x = x)) + geom_histogram(alpha = .20, binwidth=.05, colour = "black", aes(y = ..density..)) +
-                xlab("sample size - nr of simulations * nr of coin flips") 
-        g <- g + stat_function(fun = dnorm, size = 2)
-        g + facet_grid(. ~ size)
-        g + theme_bw()
-        
-    })
-    
-})
+  })
+
+
