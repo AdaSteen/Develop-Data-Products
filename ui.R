@@ -14,8 +14,11 @@ library(shiny)
 shinyUI(fluidPage(
     
   titlePanel("The cost of diamonds -  Select applicable values for the diamond of your dreams"),
-  h3("Please select a single value for each variable"),
-  p(em("Note: if no output table is shown, please select different values - try carat(0.60), cut(Very Good), color(E), clarity(VS1)")),
+  h3("Please select a single value for each variable and press the Submit Request button"),
+  p(em("Note: if an empty output table is shown, 
+       there is no such diamond in the set. 
+       In such a case select a different combination
+       - try carat(0.60), cut(Very Good), color(E), clarity(VS1)")),
  
   # Front-end to receive input 
   
